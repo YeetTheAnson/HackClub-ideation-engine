@@ -1,0 +1,4 @@
+"i love coding"
+"the derivative of pi is 0"
+"ft = mv-mu/t"
+"say hi to hackclub"
