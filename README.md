@@ -1,6 +1,10 @@
 # HackClub-ideation-engine
 A esp32 code that randomly picks a project idea, and has a one hour timer when you start a session.
 
+
+https://github.com/user-attachments/assets/5227019f-28d5-473a-9462-d9f0aae26bf7
+
+
 ## Getting Started
 
 ### Prerequisites
