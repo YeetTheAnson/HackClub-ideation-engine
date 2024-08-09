@@ -1,112 +1,107 @@
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include <TFT_eSPI.h> 
+#include <SPI.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <vector>
-#include <algorithm>
-#include <random>
 
+#define TFT_CS     15
+#define TFT_RST    4
+#define TFT_DC     2
+#define BUTTON_PIN 5
+
+TFT_eSPI tft = TFT_eSPI(); 
 const char* ssid = "Wokwi-GUEST";
+const char* password = ""; 
+const char* textURL = "https://raw.githubusercontent.com/YeetTheAnson/HackClub-ideation-engine/main/Ideas.txt";
 
-const char* url = "https://raw.githubusercontent.com/YeetTheAnson/vineboom/main/thisisasample.txt";
-
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Address 0x27, 16 columns, 2 rows
-
-// Button pin
-const int buttonPin = 38;
-int lastButtonState = HIGH; 
-
-// Global variables
-std::vector<String> sentences;
-std::vector<int> remainingIndices;
-std::mt19937 rng; 
+String sentences[50];  
+int sentenceCount = 0;
 
 void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
   Serial.begin(115200);
+  
+  // Initialize the display
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(2);
 
-  Wire.begin(8, 9); // Use GPIO 8 for SDA and GPIO 9 for SCL
-
-  lcd.begin(16, 2); // 16 columns and 2 rows
-  lcd.backlight();
-  lcd.clear();
-
-  pinMode(buttonPin, INPUT_PULLUP); 
-
-  // Connect to WiFi
-  WiFi.begin(ssid);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
-
-  // Seed the random number generator
-  rng.seed(esp_random());
+  connectToWiFi();
 
   fetchSentences();
+  
   displayRandomSentence();
 }
 
 void loop() {
-  int buttonState = digitalRead(buttonPin);
-
-  if (buttonState == LOW && lastButtonState == HIGH) {
-    delay(50);
-    if (digitalRead(buttonPin) == LOW) {
-      displayRandomSentence();
-    }
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    delay(200); 
+    displayRandomSentence();
+    while (digitalRead(BUTTON_PIN) == LOW); 
   }
+}
 
-  lastButtonState = buttonState; 
+void connectToWiFi() {
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting...");
+  }
+  
+  Serial.println("Connected to WiFi");
 }
 
 void fetchSentences() {
-  HTTPClient http;
-  http.begin(url); 
-  String payload = http.getString(); 
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(textURL);
+    int httpCode = http.GET();
 
-  // Parse the payload and store sentences
-  sentences = parseSentences(payload);
+    if (httpCode > 0) {
+      String payload = http.getString();
+      Serial.println(payload);
 
-  // Initialize remaining indices
-  remainingIndices.resize(sentences.size());
-  std::iota(remainingIndices.begin(), remainingIndices.end(), 0); 
+      int start = 0;
+      while (start >= 0 && sentenceCount < 50) {
+        int startQuote = payload.indexOf('"', start);
+        int endQuote = payload.indexOf('"', startQuote + 1);
+        
+        if (startQuote >= 0 && endQuote > startQuote) {
+          sentences[sentenceCount] = payload.substring(startQuote + 1, endQuote);
+          sentenceCount++;
+          start = endQuote + 1;
+        } else {
+          break;
+        }
+      }
 
-  // Shuffle indices
-  std::shuffle(remainingIndices.begin(), remainingIndices.end(), rng);
-  
-  http.end(); 
+      if (sentenceCount == 0) {
+        sentences[0] = "No sentences found.";
+        sentenceCount = 1;
+      }
+    } else {
+      Serial.println("Error in HTTP request");
+      sentences[0] = "Error in fetching data.";
+      sentenceCount = 1;
+    }
+    
+    http.end();
+  } else {
+    Serial.println("Not connected to WiFi");
+    sentences[0] = "Not connected to WiFi.";
+    sentenceCount = 1;
+  }
 }
 
 void displayRandomSentence() {
-  if (remainingIndices.empty()) {
-    // Refill the list if all sentences have been used
-    fetchSentences();
-  }
-
-  int index = remainingIndices.back();
-  remainingIndices.pop_back(); 
-
-  String sentence = sentences[index];
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(sentence.substring(0, 16));
-
-  if (sentence.length() > 16) {
-    lcd.setCursor(0, 1); 
-    lcd.print(sentence.substring(16, 32)); 
-  }
-}
-
-std::vector<String> parseSentences(String text) {
-  std::vector<String> result;
-  int startIdx = 0;
-  int endIdx = 0;
-
-  while ((startIdx = text.indexOf('"', endIdx)) != -1) {
-    endIdx = text.indexOf('"', startIdx + 1);
-    if (endIdx != -1) {
-      result.push_back(text.substring(startIdx + 1, endIdx));
-    }
-  }
-
-  return result;
+  tft.fillScreen(TFT_BLACK);
+  int randomIndex = random(0, sentenceCount);
+  tft.drawString(sentences[randomIndex], 10, 10, 2);
+  Serial.println(sentences[randomIndex]); 
 }
