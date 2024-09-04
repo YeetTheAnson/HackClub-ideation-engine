@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "author": "YeetTheAn3On",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 96,
+      "left": -158.36,
+      "attrs": { "fastTLS": "1" }
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd1",
+      "top": 24.6,
+      "left": 116.9,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 303.8,
+      "left": 96,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn2",
+      "top": 303.8,
+      "left": 182.4,
+      "attrs": { "color": "green" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "lcd1:GND", "esp:GND.2", "black", [ "h-19.2", "v91.54" ] ],
+    [ "lcd1:RST", "esp:4", "gold", [ "h-48", "v67.2" ] ],
+    [ "lcd1:D/C", "esp:2", "green", [ "h-28.8", "v44.14" ] ],
+    [ "lcd1:SCK", "esp:18", "#8f4814", [ "v-0.01", "h-48", "v-19.2" ] ],
+    [ "lcd1:MISO", "esp:19", "cyan", [ "h-67.2", "v-9.61", "h0", "v-19.2" ] ],
+    [ "lcd1:MOSI", "esp:23", "blue", [ "h-38.4", "v-67.31" ] ],
+    [ "esp:5V", "lcd1:VCC", "red", [ "h-21.83", "v-206.3", "h201.6", "v48.5" ] ],
+    [ "lcd1:CS", "esp:15", "white", [ "h-57.6", "v105.6" ] ],
+    [ "btn1:1.r", "btn2:1.l", "green", [ "v0" ] ],
+    [ "btn2:2.l", "esp:22", "green", [ "h0", "v38.6", "h-220.8", "v-230.4" ] ],
+    [ "btn1:2.l", "esp:5", "green", [ "h-124.8", "v-124.6" ] ],
+    [ "btn1:1.l", "esp:GND.2", "black", [ "h-57.6", "v-192" ] ]
+  ],
+  "dependencies": {}
+}
