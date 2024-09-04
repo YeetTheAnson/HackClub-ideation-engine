@@ -11,8 +11,8 @@
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
-const char* ssid = "DEFAULTSSID";
-const char* password = "DEFAULTPASS"; 
+const char* ssid = "Wokwi-GUEST";
+const char* password = ""; 
 const char* textURL = "https://raw.githubusercontent.com/YeetTheAnson/HackClub-ideation-engine/main/Ideas.txt";
 
 String sentences[50];  // Array to store sentences
